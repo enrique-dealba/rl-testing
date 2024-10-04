@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip uninstall torch -y
 RUN pip install --no-cache-dir torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu118
 
-RUN pip uninstall -y gym
+# RUN pip uninstall -y gym
 
 # Copy the source code into the container
 COPY src/ /app/src/
