@@ -19,8 +19,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip uninstall torch -y
 RUN pip install --no-cache-dir torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu118
 
-# Copy the current directory contents into the container
-COPY . /app
+# Copy the source code into the container
+COPY src/ /app/src/
+COPY scripts/ /app/scripts/
 
 # Make start.sh executable
 RUN chmod +x /app/scripts/start.sh
