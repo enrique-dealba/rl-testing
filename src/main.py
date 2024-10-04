@@ -148,7 +148,12 @@ def main():
 
     global_step = 0
     start_time = time.time()
-    next_obs = torch.Tensor(envs.reset()).to(device)
+    # next_obs = torch.Tensor(envs.reset()).to(device)
+    # After resetting the environment
+    next_obs_np, _ = envs.reset()
+    # Ensure the observations are float tensors and move them to the correct device
+    next_obs = torch.from_numpy(next_obs_np).float().to(device)
+
     next_done = torch.zeros(args.num_envs).to(device)
 
     for iteration in range(1, num_iterations + 1):
@@ -183,10 +188,23 @@ def main():
             actions[step] = action
             logprobs[step] = logprob
 
-            next_obs_np, reward, next_done_np, info = envs.step(action.cpu().numpy())
+            # next_obs_np, reward, next_done_np, info = envs.step(action.cpu().numpy())
+            # rewards[step] = torch.tensor(reward).to(device).view(-1)
+            # next_obs = torch.from_numpy(next_obs_np).to(device)
+            # next_done = torch.from_numpy(next_done_np).to(device).float()
+            next_obs_np, reward, terminated, truncated, info = envs.step(
+                action.cpu().numpy()
+            )
+            done = np.logical_or(terminated, truncated)
             rewards[step] = torch.tensor(reward).to(device).view(-1)
-            next_obs = torch.from_numpy(next_obs_np).to(device)
-            next_done = torch.from_numpy(next_done_np).to(device).float()
+            next_obs = torch.from_numpy(next_obs_np).float().to(device)
+            next_done = torch.from_numpy(done).to(device).float()
+
+            # Verify shapes of observations match what Agent network expects
+            logger.info(
+                f"Observation Space Shape: {envs.single_observation_space.shape}"
+            )
+            logger.info(f"Sample Observation Shape: {next_obs.shape}")
 
             # Logging
             for idx, done_flag in enumerate(next_done):
