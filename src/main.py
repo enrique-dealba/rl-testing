@@ -201,10 +201,10 @@ def main():
             next_done = torch.from_numpy(done).to(device).float()
 
             # Verify shapes of observations match what Agent network expects
-            logger.info(
-                f"Observation Space Shape: {envs.single_observation_space.shape}"
-            )
-            logger.info(f"Sample Observation Shape: {next_obs.shape}")
+            # logger.info(
+            #     f"Observation Space Shape: {envs.single_observation_space.shape}"
+            # )
+            # logger.info(f"Sample Observation Shape: {next_obs.shape}")
 
             # Logging
             for idx, done_flag in enumerate(next_done):
