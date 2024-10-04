@@ -73,8 +73,7 @@ def parse_args():
     )
     parser.add_argument(
         "--anneal_lr",
-        type=bool,
-        default=True,
+        action="store_true",
         help="Whether to anneal the learning rate",
     )
     parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor")
@@ -100,19 +99,20 @@ def parse_args():
         "--update_epochs", type=int, default=4, help="Number of epochs for each update"
     )
     parser.add_argument(
-        "--norm_adv", type=bool, default=True, help="Normalize advantages"
+        "--norm_adv",
+        action="store_true",
+        help="Normalize advantages",
     )
-    parser.add_argument("--clip_vloss", type=bool, default=True, help="Clip value loss")
+    parser.add_argument(
+        "--clip_vloss",
+        action="store_true",
+        help="Clip value loss",
+    )
     parser.add_argument(
         "--target_kl",
         type=float,
         default=None,
         help="Target KL divergence for early stopping",
-    )
-    parser.add_argument(
-        "--track",
-        action="store_true",
-        help="Whether to track the experiment with wandb",
     )
 
     args = parser.parse_args()
