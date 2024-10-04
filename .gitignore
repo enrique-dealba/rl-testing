@@ -48,10 +48,6 @@ logs/
 wandb/
 *.wandb
 
-# Docker
-.dockerignore
-Dockerfile
-
 # OS generated files
 .DS_Store
 .DS_Store?
