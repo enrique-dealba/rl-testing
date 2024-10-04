@@ -3,9 +3,10 @@ FROM pytorch/pytorch:2.1.2-cuda11.8-cudnn8-runtime
 # Set the working directory in the container
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies and build tools
 RUN apt-get update && apt-get install -y \
     git \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container
