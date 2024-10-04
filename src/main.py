@@ -4,11 +4,11 @@ import time
 from collections import deque
 
 import envpool
-import gymnasium as gym
 import numpy as np
 import torch
 import torch.nn as nn
 import wandb
+from gymnasium.spaces import Discrete
 from torch.utils.tensorboard import SummaryWriter
 
 from src.models.agent import Agent
@@ -89,7 +89,7 @@ def main():
     # Environment setup
     envs = envpool.make(
         args.env_id,
-        env_type="gym",
+        env_type="gymnasium",
         num_envs=args.num_envs,
         episodic_life=True,
         reward_clip=True,
@@ -99,8 +99,9 @@ def main():
     envs.single_action_space = envs.action_space
     envs.single_observation_space = envs.observation_space
     envs = RecordEpisodeStatistics(envs)
+    logger.info(f"Action Space Type: {type(envs.action_space)}")
     assert isinstance(
-        envs.action_space, gym.spaces.Discrete
+        envs.action_space, Discrete
     ), "Only discrete action space is supported."
 
     # Initialize Agent
