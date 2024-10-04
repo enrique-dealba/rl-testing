@@ -56,7 +56,64 @@ def parse_args():
         help="Use memory saving kron optimizer",
     )
 
-    # Additional training parameters can be added here
+    parser.add_argument(
+        "--num_envs", type=int, default=4, help="Number of parallel environments"
+    )
+    parser.add_argument(
+        "--num_steps",
+        type=int,
+        default=128,
+        help="Number of steps per environment per update",
+    )
+    parser.add_argument(
+        "--num_minibatches",
+        type=int,
+        default=4,
+        help="Number of minibatches for updates",
+    )
+    parser.add_argument(
+        "--anneal_lr",
+        type=bool,
+        default=True,
+        help="Whether to anneal the learning rate",
+    )
+    parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor")
+    parser.add_argument(
+        "--gae_lambda", type=float, default=0.95, help="GAE lambda parameter"
+    )
+    parser.add_argument(
+        "--clip_coef", type=float, default=0.2, help="PPO clip coefficient"
+    )
+    parser.add_argument(
+        "--ent_coef", type=float, default=0.01, help="Entropy coefficient"
+    )
+    parser.add_argument(
+        "--vf_coef", type=float, default=0.5, help="Value function coefficient"
+    )
+    parser.add_argument(
+        "--max_grad_norm",
+        type=float,
+        default=0.5,
+        help="Maximum gradient norm for clipping",
+    )
+    parser.add_argument(
+        "--update_epochs", type=int, default=4, help="Number of epochs for each update"
+    )
+    parser.add_argument(
+        "--norm_adv", type=bool, default=True, help="Normalize advantages"
+    )
+    parser.add_argument("--clip_vloss", type=bool, default=True, help="Clip value loss")
+    parser.add_argument(
+        "--target_kl",
+        type=float,
+        default=None,
+        help="Target KL divergence for early stopping",
+    )
+    parser.add_argument(
+        "--track",
+        action="store_true",
+        help="Whether to track the experiment with wandb",
+    )
 
     args = parser.parse_args()
     return args

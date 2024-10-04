@@ -24,6 +24,29 @@ def main():
     args = parse_args()
     logger = setup_logger()
 
+    # Error handling for required arguments
+    required_args = [
+        "num_envs",
+        "num_steps",
+        "num_minibatches",
+        "total_timesteps",
+        "anneal_lr",
+        "gamma",
+        "gae_lambda",
+        "clip_coef",
+        "ent_coef",
+        "vf_coef",
+        "max_grad_norm",
+        "update_epochs",
+        "norm_adv",
+        "clip_vloss",
+        "target_kl",
+    ]
+
+    for arg in required_args:
+        if not hasattr(args, arg):
+            raise ValueError(f"ERROR: Required argument '{arg}' is missing.")
+
     # Set Wandb API key from environment variable
     wandb_key = os.getenv("WANDB_API_KEY")
     if args.track:
