@@ -67,6 +67,14 @@ def main():
             monitor_gym=True,
             save_code=True,
         )
+        # Construct the run path for logging
+        run_path = f"{wandb.run.entity}/{wandb.run.project}/{wandb.run.id}"
+        run_url = wandb.run.get_url()
+        logger.info(f"Wandb Run Path: {run_path}")
+        logger.info(f"Wandb Run URL: {run_url}")
+    else:
+        run_path = None
+        run_url = None
 
     writer = SummaryWriter(
         f"runs/{args.exp_name}_{args.env_id}_{args.seed}_{int(time.time())}"
@@ -350,42 +358,40 @@ def main():
                 }
             )
 
-    # After training loop
-    envs.close()
-    writer.close()
+    # Save the trained model
+    model_path = "trained_model.pth"
+    torch.save(agent.state_dict(), model_path)
+    logger.info(f"Saved trained model to {model_path}")
 
     if args.track:
-        # Save model to wandb
-        model_artifact = wandb.Artifact(
-            f"{args.env_id}_model_{args.seed}",
-            type="model",
-            description=f"Trained model for {args.env_id} environment",
-        )
-        torch.save(agent.state_dict(), "model.pth")
-        model_artifact.add_file("model.pth")
-        wandb.log_artifact(model_artifact)
+        # Create a Wandb Artifact
+        artifact = wandb.Artifact("trained-agent-model", type="model")
+        artifact.add_file(model_path)
+        wandb.log_artifact(artifact)
         logger.info("Uploaded model to Wandb as an artifact.")
 
-        # Log model summary and hyperparameters
-        model_summary = {}
-        model_summary["num_trainable_params"] = sum(
-            p.numel() for p in agent.parameters() if p.requires_grad
-        )
-        model_summary["model_architecture"] = str(agent)
+        # Log artifact details
+        logger.info(f"Artifact Name: {artifact.name}")
+        logger.info(f"Artifact Type: {artifact.type}")
+        logger.info(f"Artifact Version: {artifact.version}")
+        logger.info(f"Wandb Run Path: {run_path}")
+
+        # Optionally, log model parameters and summary
+        model_summary = {
+            "num_trainable_params": sum(
+                p.numel() for p in agent.parameters() if p.requires_grad
+            ),
+            "model_architecture": str(agent),
+        }
         wandb.config.update(model_summary)
-        wandb.config.update(vars(args))
         logger.info("Logged model summary and parameters to Wandb.")
 
-        # Finish the wandb run
+    envs.close()
+    writer.close()
+    if args.track:
         wandb.finish()
 
     logger.info("Training completed.")
-    logger.info(f"Model saved to wandb as: {args.env_id}_model_{args.seed}")
-    total_params = sum(p.numel() for p in agent.parameters())
-    trainable_params = sum(p.numel() for p in agent.parameters() if p.requires_grad)
-    logger.info(f"Total parameters: {total_params}")
-    logger.info(f"Trainable parameters: {trainable_params}")
-    logger.info(f"Hyperparameters: {vars(args)}")
 
 
 if __name__ == "__main__":
