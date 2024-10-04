@@ -24,6 +24,7 @@ RUN pip install --no-cache-dir torch==2.1.2 torchvision==0.16.2 --index-url http
 # Copy the source code into the container
 COPY src/ /app/src/
 COPY scripts/ /app/scripts/
+COPY streamlit_app/ /app/streamlit_app/
 
 # Make start.sh executable
 RUN chmod +x /app/scripts/start.sh

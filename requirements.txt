@@ -6,3 +6,5 @@ wandb
 envpool
 kron-torch
 numpy
+streamlit
+pillow

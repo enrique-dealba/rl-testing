@@ -25,8 +25,12 @@ case "$1" in
     diagnostics)
         python /app/scripts/run_diagnostics.py
         ;;
+    streamlit)
+        shift
+        streamlit run /app/streamlit_app/streamlit_app.py --server.port 8888 --server.address 0.0.0.0
+        ;;
     *)
-        echo "Usage: ./scripts/start.sh [train|diagnostics] [options]"
+        echo "Usage: ./scripts/start.sh [train|diagnostics|streamlit] [options]"
         exit 1
         ;;
 esac
