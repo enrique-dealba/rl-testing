@@ -1,0 +1,8 @@
+git+https://github.com/pufferai/pufferlib.git@1.0
+gymnasium[atari,accept-rom-license]==0.29.1
+tensorboard==2.11.2
+stable_baselines3==2.1.0
+wandb
+envpool
+kron-torch
+numpy
