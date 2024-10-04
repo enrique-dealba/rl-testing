@@ -1,4 +1,5 @@
 import io
+import os
 
 import gymnasium as gym
 import streamlit as st
@@ -11,7 +12,7 @@ from src.models.agent import Agent
 
 def load_model_from_wandb(run_path, artifact_name="trained-agent-model"):
     """
-    Load the trained model from Wandb artifact.
+    Load the trained model from a Wandb artifact.
 
     Args:
         run_path (str): Wandb run path in the format 'entity/project/run_id'.
@@ -21,28 +22,47 @@ def load_model_from_wandb(run_path, artifact_name="trained-agent-model"):
         agent (Agent): Loaded agent model.
         env (gym.Env): Gym environment instance.
     """
-    # Initialize Wandb
-    wandb.init(
-        project=run_path.split("/")[1],
-        entity=run_path.split("/")[0],
-        resume="allow",
-        anonymous="allow",
-    )
+    try:
+        # Initialize Wandb with fork start method to handle multiprocessing issues
+        wandb.init(
+            project=run_path.split("/")[1],
+            entity=run_path.split("/")[0],
+            resume="allow",
+            settings=wandb.Settings(start_method="fork"),
+        )
+    except Exception as e:
+        st.error(f"Failed to initialize Wandb: {e}")
+        raise e
 
-    # Retrieve the artifact
-    artifact = wandb.use_artifact(f"{run_path}/{artifact_name}:latest", type="model")
-    artifact_dir = artifact.download()
+    try:
+        # Construct the full artifact path
+        artifact_full_path = f"{run_path}/{artifact_name}:latest"
+        artifact = wandb.use_artifact(artifact_full_path, type="model")
+        artifact_dir = artifact.download()
+    except Exception as e:
+        st.error(f"Failed to retrieve artifact '{artifact_full_path}': {e}")
+        raise e
 
-    # Load the model state_dict
-    model_path = f"{artifact_dir}/trained_model.pth"
-    state_dict = torch.load(model_path, map_location=torch.device("cpu"))
+    try:
+        # Load the model state_dict
+        model_path = os.path.join(artifact_dir, "trained_model.pth")
+        state_dict = torch.load(model_path, map_location=torch.device("cpu"))
+    except Exception as e:
+        st.error(f"Failed to load model from '{model_path}': {e}")
+        raise e
 
-    # Initialize the Agent model
-    env_id = "MsPacman-v5"  # Ensure this matches the environment used during training
-    env = gym.make(env_id)
-    agent = Agent(env)
-    agent.load_state_dict(state_dict)
-    agent.eval()
+    try:
+        # Initialize the Agent model
+        env_id = (
+            "MsPacman-v5"  # Ensure this matches the environment used during training
+        )
+        env = gym.make(env_id)
+        agent = Agent(env)
+        agent.load_state_dict(state_dict)
+        agent.eval()
+    except Exception as e:
+        st.error(f"Failed to initialize the Agent model: {e}")
+        raise e
 
     return agent, env
 
@@ -59,26 +79,30 @@ def run_episode(agent, env, render=True):
     Returns:
         frames (list of PIL.Image): List of frames captured during the episode.
     """
-    obs, info = env.reset()
-    done = False
-    frames = []
+    try:
+        obs, info = env.reset()
+        done = False
+        frames = []
 
-    while not done:
-        obs_tensor = (
-            torch.from_numpy(obs).float().unsqueeze(0) / 255.0
-        )  # Normalize if needed
-        with torch.no_grad():
-            action, _, _, _ = agent.get_action_and_value(obs_tensor)
-        action = action.cpu().numpy()[0]
-        obs, reward, terminated, truncated, info = env.step(action)
-        done = terminated or truncated
+        while not done:
+            obs_tensor = (
+                torch.from_numpy(obs).float().unsqueeze(0) / 255.0
+            )  # Normalize if needed
+            with torch.no_grad():
+                action, _, _, _ = agent.get_action_and_value(obs_tensor)
+            action = action.cpu().numpy()[0]
+            obs, reward, terminated, truncated, info = env.step(action)
+            done = terminated or truncated
 
-        if render:
-            frame = env.render(mode="rgb_array")
-            frames.append(Image.fromarray(frame))
+            if render:
+                frame = env.render(mode="rgb_array")
+                frames.append(Image.fromarray(frame))
 
-    env.close()
-    return frames
+        env.close()
+        return frames
+    except Exception as e:
+        st.error(f"Error during episode run: {e}")
+        raise e
 
 
 def main():
@@ -86,12 +110,13 @@ def main():
 
     st.sidebar.header("Wandb Configuration")
     run_path = st.sidebar.text_input(
-        "Wandb Run Path", value="my_username/rl-gpu-test/abc123"
+        "Wandb Run Path",
+        value="edealba/rl-gpu-test/MsPacman-v5__ms_pacman_rl_test__1__1728075785",
     )
     artifact_name = st.sidebar.text_input("Artifact Name", value="trained-agent-model")
 
     if st.sidebar.button("Load Model and Run Episode"):
-        if run_path:
+        if run_path and artifact_name:
             with st.spinner("Loading model from Wandb..."):
                 try:
                     agent, env = load_model_from_wandb(run_path, artifact_name)
@@ -102,21 +127,30 @@ def main():
 
             st.sidebar.write("Running episode...")
             with st.spinner("Running episode..."):
-                frames = run_episode(agent, env, render=True)
-                st.success("Episode completed!")
+                try:
+                    frames = run_episode(agent, env, render=True)
+                    st.success("Episode completed!")
+                except Exception as e:
+                    st.error(f"Error during episode run: {e}")
+                    return
 
             # Display frames as an animated GIF
-            img_buffer = io.BytesIO()
-            frames[0].save(
-                img_buffer,
-                format="GIF",
-                save_all=True,
-                append_images=frames[1:],
-                duration=50,
-                loop=0,
-            )
-            img_buffer.seek(0)
-            st.image(img_buffer, use_column_width=True)
+            if frames:
+                img_buffer = io.BytesIO()
+                frames[0].save(
+                    img_buffer,
+                    format="GIF",
+                    save_all=True,
+                    append_images=frames[1:],
+                    duration=50,
+                    loop=0,
+                )
+                img_buffer.seek(0)
+                st.image(img_buffer, use_column_width=True)
+            else:
+                st.warning("No frames captured for the episode.")
+        else:
+            st.error("Please provide both Wandb Run Path and Artifact Name.")
 
 
 if __name__ == "__main__":
