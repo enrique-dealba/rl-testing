@@ -20,7 +20,9 @@ class RecordEpisodeStatistics(gym.Wrapper):
 
     def step(self, action):
         observations, rewards, terminated, truncated, info = super().step(action)
-        self.episode_returns += rewards
+        # self.episode_returns += rewards
+        print(f"RecordEpisodeStatistics -- info keys: {info.keys()}")
+        self.episode_returns += info["rewards"]
         self.episode_lengths += 1
         self.returned_episode_returns[:] = self.episode_returns
         self.returned_episode_lengths[:] = self.episode_lengths
