@@ -8,10 +8,22 @@ from src.utils.initialization import layer_init
 class Agent(nn.Module):
     def __init__(self, envs):
         super().__init__()
-        # Get the observation space shape, e.g., (C, H, W)
-        obs_shape = envs.single_observation_space.shape
+        # Try to get observation space, handling both old and new versions
+        obs_space = (
+            getattr(envs, "single_observation_space", None) or envs.observation_space
+        )
+        act_space = getattr(envs, "single_action_space", None) or envs.action_space
+
+        # note: Observation space shape, (C, H, W)
+        obs_shape = obs_space.shape
         input_channels = obs_shape[0]
-        n_actions = envs.single_action_space.n
+        n_actions = act_space.n
+
+        assert input_channels in [
+            1,
+            3,
+            4,
+        ], f"Expected 1, 3, or 4 channels, got {input_channels}"
 
         # Define convolutional layers
         self.conv = nn.Sequential(
