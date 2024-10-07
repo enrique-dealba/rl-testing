@@ -35,12 +35,11 @@ def load_model_from_wandb(run_path, artifact_name="trained-agent-model"):
         raise e
 
     try:
-        # Construct the full artifact path
-        artifact_full_path = f"{run_path}/{artifact_name}:latest"
-        artifact = wandb.use_artifact(artifact_full_path, type="model")
+        # note: Use artifact_name directly, don't include the run_path
+        artifact = wandb.use_artifact(artifact_name, type="model")
         artifact_dir = artifact.download()
     except Exception as e:
-        st.error(f"Failed to retrieve artifact '{artifact_full_path}': {e}")
+        st.error(f"Failed to retrieve artifact '{artifact_name}': {e}")
         raise e
 
     try:
