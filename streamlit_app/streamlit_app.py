@@ -10,6 +10,17 @@ from PIL import Image
 from src.models.agent import Agent
 
 
+def create_environment(base_env_id):
+    versions = ["v5", "v4", "v0"]  # List versions in order of preference
+    for version in versions:
+        env_id = f"{base_env_id}-{version}"
+        try:
+            return gym.make(env_id)
+        except gym.error.Error:
+            continue
+    raise ValueError(f"No valid version found for {base_env_id}")
+
+
 def load_model_from_wandb(run_path, artifact_name="trained-agent-model"):
     """
     Load the trained model from a Wandb artifact.
@@ -52,16 +63,16 @@ def load_model_from_wandb(run_path, artifact_name="trained-agent-model"):
 
     try:
         # Initialize the Agent model
-        env_id = (
-            "MsPacman-v5"  # Ensure this matches the environment used during training
-        )
-        env = gym.make(env_id)
+        env = create_environment("MsPacman")
         agent = Agent(env)
         agent.load_state_dict(state_dict)
         agent.eval()
+    except ValueError as ve:
+        st.error(f"Failed to create environment: {ve}")
+        raise
     except Exception as e:
         st.error(f"Failed to initialize the Agent model: {e}")
-        raise e
+        raise
 
     return agent, env
 
@@ -112,7 +123,9 @@ def main():
         "Wandb Run Path",
         value="edealba/rl-gpu-test/ftwcfo67",
     )
-    artifact_name = st.sidebar.text_input("Artifact Name", value="trained-agent-model:v0")
+    artifact_name = st.sidebar.text_input(
+        "Artifact Name", value="trained-agent-model:v0"
+    )
 
     if st.sidebar.button("Load Model and Run Episode"):
         if run_path and artifact_name:
