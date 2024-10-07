@@ -17,9 +17,15 @@ def create_environment(env_id, num_envs=1):
         env_id,
         env_type="gymnasium",
         num_envs=num_envs,
-        episodic_life=True,
-        reward_clip=True,
-        render_mode="rgb_array",
+        episodic_life=True,  # This was already set in your original code
+        reward_clip=True,  # This was already set in your original code
+        stack_num=4,  # Default stack_num, matching your likely training setup
+        gray_scale=True,  # Default setting
+        frame_skip=4,  # Default frame_skip
+        img_height=84,  # Default image height
+        img_width=84,  # Default image width
+        noop_max=30,  # Default noop_max
+        seed=42,  # TODO: make this configurable
     )
     envs.num_envs = num_envs
     envs.single_action_space = envs.action_space
@@ -78,21 +84,18 @@ def run_episode(agent, envs, render=True):
             with torch.no_grad():
                 action, _, _, _ = agent.get_action_and_value(next_obs)
             action = action.cpu().numpy()
-            next_obs, _, terminated, truncated, info = envs.step(action)
-            print(f"Info keys: {info.keys()}")
-
+            next_obs, _, terminated, truncated, _ = envs.step(action)
             next_obs = torch.from_numpy(next_obs).float()
             done = np.logical_or(terminated, truncated)[0]
 
             if render:
-                # check: EnvPool returns frames directly in info dict
-                if "rgb" in info:
-                    frame = info["rgb"][0]  # Assuming the first env
-                    frames.append(Image.fromarray(frame))
-                else:
-                    st.warning(
-                        "Rendering information not available in the env's info dict."
-                    )
+                # Use the last frame of the stacked observation
+                frame = next_obs[0, -1].cpu().numpy()  # Shape should be (84, 84)
+                # Convert to RGB by repeating the channel
+                frame_rgb = np.stack([frame] * 3, axis=-1)
+                # Normalize to 0-255 range
+                frame_rgb = (frame_rgb * 255).astype(np.uint8)
+                frames.append(Image.fromarray(frame_rgb))
 
         return frames
     except Exception as e:
