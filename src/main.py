@@ -151,6 +151,8 @@ def main():
     minibatch_size = batch_size // args.num_minibatches
     num_iterations = args.total_timesteps // batch_size
     logger.info(f"Starting training for {num_iterations} iterations.")
+    logger.info(f"batch_size: {batch_size}")
+    logger.info(f"minibatch_size: {minibatch_size}")
 
     avg_returns = deque(maxlen=20)
 
@@ -208,22 +210,14 @@ def main():
             next_obs = torch.from_numpy(next_obs_np).float().to(device)
             next_done = torch.from_numpy(done).to(device).float()
 
-            # Verify shapes of observations match what Agent network expects
-            # logger.info(
-            #     f"Observation Space Shape: {envs.single_observation_space.shape}"
-            # )
-            # logger.info(f"Sample Observation Shape: {next_obs.shape}")
-
             # Logging
             for idx, done_flag in enumerate(next_done):
-                if done_flag and info["l"][idx] == 0:
-                    if iteration % 20 == 0:
-                        logger.info(
-                            f"global_step={global_step}, episodic_return={info['r'][idx]}"
-                        )
+                if done_flag and info["lives"][idx] == 0:
                     avg_returns.append(info["r"][idx])
                     writer.add_scalar(
-                        "charts/avg_episodic_return", np.mean(avg_returns), global_step
+                        "charts/avg_episodic_return",
+                        np.average(avg_returns),
+                        global_step,
                     )
                     writer.add_scalar(
                         "charts/episodic_return", info["r"][idx], global_step
@@ -231,6 +225,10 @@ def main():
                     writer.add_scalar(
                         "charts/episodic_length", info["l"][idx], global_step
                     )
+                    if iteration % 20 == 0:
+                        logger.info(
+                            f"global_step={global_step}, episodic_return={info['r'][idx]}"
+                        )
 
         # Compute advantages and returns
         agent.train()
