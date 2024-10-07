@@ -106,14 +106,14 @@ def run_episode(agent, env, render=True):
 
 
 def main():
-    st.title("Trained RL Agent Visualization")
+    st.title("Reinforcement Learning Agent")
 
     st.sidebar.header("Wandb Configuration")
     run_path = st.sidebar.text_input(
         "Wandb Run Path",
-        value="edealba/rl-gpu-test/MsPacman-v5__ms_pacman_rl_test__1__1728075785",
+        value="edealba/rl-gpu-test/ftwcfo67",
     )
-    artifact_name = st.sidebar.text_input("Artifact Name", value="trained-agent-model")
+    artifact_name = st.sidebar.text_input("Artifact Name", value="trained-agent-model:v0")
 
     if st.sidebar.button("Load Model and Run Episode"):
         if run_path and artifact_name:
