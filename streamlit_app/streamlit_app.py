@@ -19,6 +19,7 @@ def create_environment(env_id, num_envs=1):
         num_envs=num_envs,
         episodic_life=True,
         reward_clip=True,
+        render_mode="rgb_array",
     )
     envs.num_envs = num_envs
     envs.single_action_space = envs.action_space
@@ -78,12 +79,20 @@ def run_episode(agent, envs, render=True):
                 action, _, _, _ = agent.get_action_and_value(next_obs)
             action = action.cpu().numpy()
             next_obs, _, terminated, truncated, info = envs.step(action)
+            print(f"Info keys: {info.keys()}")
+
             next_obs = torch.from_numpy(next_obs).float()
             done = np.logical_or(terminated, truncated)[0]
 
             if render:
-                frame = envs.render()
-                frames.append(Image.fromarray(frame[0]))
+                # check: EnvPool returns frames directly in info dict
+                if "rgb" in info:
+                    frame = info["rgb"][0]  # Assuming the first env
+                    frames.append(Image.fromarray(frame))
+                else:
+                    st.warning(
+                        "Rendering information not available in the env's info dict."
+                    )
 
         return frames
     except Exception as e:
