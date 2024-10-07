@@ -57,7 +57,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--num_envs", type=int, default=4, help="Number of parallel environments"
+        "--num_envs", type=int, default=8, help="Number of parallel environments"
     )
     parser.add_argument(
         "--num_steps",

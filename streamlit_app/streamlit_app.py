@@ -105,15 +105,24 @@ def run_episode(agent, envs, render=True):
 
 def main():
     st.title("Reinforcement Learning Agent")
-
     st.sidebar.header("Wandb Configuration")
-    run_path = st.sidebar.text_input(
-        "Wandb Run Path",
-        value="edealba/rl-gpu-test/ftwcfo67",
-    )
-    artifact_name = st.sidebar.text_input(
-        "Artifact Name", value="trained-agent-model:v0"
-    )
+
+    # Initialize session state for run_path if doesn't exist
+    if "run_path" not in st.session_state:
+        st.session_state.run_path = "edealba/rl-gpu-test/ftwcfo67"
+
+    # Use session state for text input
+    run_path = st.sidebar.text_input("Wandb Run Path", key="run_path")
+
+    # Initialize session state for artifact_name if doesn't exist
+    if "artifact_name" not in st.session_state:
+        st.session_state.artifact_name = "trained-agent-model:v0"
+
+    # Use session state for text input
+    artifact_name = st.sidebar.text_input("Artifact Name", key="artifact_name")
+
+    st.write(f"Current Run Path: {run_path}")
+    st.write(f"Current Artifact Name: {artifact_name}")
 
     if st.sidebar.button("Load Model and Run Episode"):
         if run_path and artifact_name:
