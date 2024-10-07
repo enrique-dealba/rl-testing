@@ -370,6 +370,9 @@ def main():
         wandb.log_artifact(artifact)
         logger.info("Uploaded model to Wandb as an artifact.")
 
+        # Wait for artifact to be fully logged
+        artifact.wait()
+
         # Log artifact details
         logger.info(f"Artifact Name: {artifact.name}")
         logger.info(f"Artifact Type: {artifact.type}")
