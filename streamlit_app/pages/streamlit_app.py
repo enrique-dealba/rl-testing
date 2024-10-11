@@ -11,6 +11,10 @@ from PIL import Image
 from src.models.agent import Agent
 from src.wrappers.record_episode_statistics import RecordEpisodeStatistics
 
+st.set_page_config(page_title="Trained Agent", page_icon="🎮")
+
+st.title("Reinforcement Learning Agent")
+
 
 def create_environment(env_id, num_envs=1):
     envs = envpool.make(
@@ -103,63 +107,57 @@ def run_episode(agent, envs, render=True):
         raise e
 
 
-def main():
-    st.title("Reinforcement Learning Agent")
-    st.sidebar.header("Wandb Configuration")
+st.sidebar.header("Wandb Configuration")
 
-    # Initialize session state for run_path if doesn't exist
-    if "run_path" not in st.session_state:
-        st.session_state.run_path = "edealba/rl-gpu-test/ftwcfo67"
+# Initialize session state for run_path if doesn't exist
+if "run_path" not in st.session_state:
+    st.session_state.run_path = "edealba/rl-gpu-test/ftwcfo67"
 
-    # Use session state for text input
-    run_path = st.sidebar.text_input("Wandb Run Path", key="run_path")
+# Use session state for text input
+run_path = st.sidebar.text_input("Wandb Run Path", key="run_path")
 
-    # Initialize session state for artifact_name if doesn't exist
-    if "artifact_name" not in st.session_state:
-        st.session_state.artifact_name = "trained-agent-model:v0"
+# Initialize session state for artifact_name if doesn't exist
+if "artifact_name" not in st.session_state:
+    st.session_state.artifact_name = "trained-agent-model:v0"
 
-    # Use session state for text input
-    artifact_name = st.sidebar.text_input("Artifact Name", key="artifact_name")
+# Use session state for text input
+artifact_name = st.sidebar.text_input("Artifact Name", key="artifact_name")
 
-    st.write(f"Current Run Path: {run_path}")
-    st.write(f"Current Artifact Name: {artifact_name}")
+st.write(f"Current Run Path: {run_path}")
+st.write(f"Current Artifact Name: {artifact_name}")
 
-    if st.sidebar.button("Load Model and Run Episode"):
-        if run_path and artifact_name:
-            with st.spinner("Loading model from Wandb..."):
-                try:
-                    agent, envs = load_model_from_wandb(run_path, artifact_name)
-                    st.success("Model loaded successfully!")
-                except Exception as e:
-                    st.error(f"Error loading model: {e}")
-                    return
+if st.sidebar.button("Load Model and Run Episode"):
+    if run_path and artifact_name:
+        with st.spinner("Loading model from Wandb..."):
+            try:
+                agent, envs = load_model_from_wandb(run_path, artifact_name)
+                st.success("Model loaded successfully!")
+            except Exception as e:
+                st.error(f"Error loading model: {e}")
+                st.stop()
 
-            st.sidebar.write("Running episode...")
-            with st.spinner("Running episode..."):
-                try:
-                    frames = run_episode(agent, envs, render=True)
-                    st.success("Episode completed!")
-                except Exception as e:
-                    st.error(f"Error during episode run: {e}")
-                    return
+        st.sidebar.write("Running episode...")
+        with st.spinner("Running episode..."):
+            try:
+                frames = run_episode(agent, envs, render=True)
+                st.success("Episode completed!")
+            except Exception as e:
+                st.error(f"Error during episode run: {e}")
+                st.stop()
 
-            if frames:
-                img_buffer = io.BytesIO()
-                frames[0].save(
-                    img_buffer,
-                    format="GIF",
-                    save_all=True,
-                    append_images=frames[1:],
-                    duration=50,
-                    loop=0,
-                )
-                img_buffer.seek(0)
-                st.image(img_buffer, use_column_width=True)
-            else:
-                st.warning("No frames captured for the episode.")
+        if frames:
+            img_buffer = io.BytesIO()
+            frames[0].save(
+                img_buffer,
+                format="GIF",
+                save_all=True,
+                append_images=frames[1:],
+                duration=50,
+                loop=0,
+            )
+            img_buffer.seek(0)
+            st.image(img_buffer, use_column_width=True)
         else:
-            st.error("Please provide both Wandb Run Path and Artifact Name.")
-
-
-if __name__ == "__main__":
-    main()
+            st.warning("No frames captured for the episode.")
+    else:
+        st.error("Please provide both Wandb Run Path and Artifact Name.")
