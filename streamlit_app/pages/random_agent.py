@@ -41,7 +41,7 @@ for env in possible_envs:
 # Display the available environments in Streamlit
 st.write("Available environments:", available_envs)
 
-from pettingzoo.mpe import simple_adversary_v3
+from pettingzoo.mpe import simple_adversary_v2
 
 st.set_page_config(page_title="Random Agent", page_icon="🎲")
 
@@ -95,7 +95,7 @@ if st.sidebar.button("Run Random Agent"):
             env = gym.make(selected_env)
             frames = run_random_episode_gym(env)
         else:
-            env = simple_adversary_v3.parallel_env(render_mode="rgb_array")
+            env = simple_adversary_v2.parallel_env(render_mode="rgb_array")
             frames = run_random_episode_mpe(env)
 
         if frames:
