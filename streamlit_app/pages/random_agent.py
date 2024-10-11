@@ -2,8 +2,41 @@ import io
 
 import gym
 import streamlit as st
-from pettingzoo.mpe import simple_adversary_v3
 from PIL import Image
+
+possible_envs = [
+    "simple_adversary_v3",
+    "simple_crypto_v2",
+    "simple_push_v2",
+    "simple_reference_v2",
+    "simple_speaker_listener_v3",
+    "simple_spread_v3",
+    "simple_tag_v2",
+    "simple_world_comm_v2",
+    "simple_adversary_v1",
+    "simple_crypto_v1",
+    "simple_push_v1",
+    "simple_reference_v1",
+    "simple_speaker_listener_v1",
+    "simple_spread_v1",
+    "simple_tag_v1",
+    "simple_world_comm_v1",
+]
+
+available_envs = []
+
+for env in possible_envs:
+    try:
+        # Dynamically import the environment
+        module = __import__(f"pettingzoo.mpe.{env}", fromlist=[""])
+        available_envs.append(env)
+    except ImportError:
+        # Skip if import fails
+        pass
+
+print("Available environments:", available_envs)
+
+from pettingzoo.mpe import simple_adversary_v3
 
 st.set_page_config(page_title="Random Agent", page_icon="🎲")
 
