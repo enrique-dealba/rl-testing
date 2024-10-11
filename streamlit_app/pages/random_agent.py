@@ -1,8 +1,11 @@
 import io
 
 import gym
+import pettingzoo
 import streamlit as st
 from PIL import Image
+
+st.write(f"PettingZoo version: {pettingzoo.__version__}")
 
 possible_envs = [
     "simple_adversary_v3",
@@ -21,6 +24,7 @@ possible_envs = [
     "simple_spread_v1",
     "simple_tag_v1",
     "simple_world_comm_v1",
+    "simple_adversary_v2",
 ]
 
 available_envs = []
