@@ -34,7 +34,8 @@ for env in possible_envs:
         # Skip if import fails
         pass
 
-print("Available environments:", available_envs)
+# Display the available environments in Streamlit
+st.write("Available environments:", available_envs)
 
 from pettingzoo.mpe import simple_adversary_v3
 
