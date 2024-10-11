@@ -8,4 +8,4 @@ kron-torch
 numpy
 streamlit
 pillow
-pettingzoo[mpe]==1.24.3
+pettingzoo[mpe]
