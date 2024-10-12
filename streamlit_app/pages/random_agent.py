@@ -1,8 +1,11 @@
+import streamlit as st
+
+st.set_page_config(page_title="Random Agent", page_icon="🎲")
+
 import io
 
 import gym
 import pettingzoo
-import streamlit as st
 from PIL import Image
 
 st.write(f"PettingZoo version: {pettingzoo.__version__}")
@@ -42,8 +45,6 @@ for env in possible_envs:
 st.write("Available environments:", available_envs)
 
 from pettingzoo.mpe import simple_adversary_v2
-
-st.set_page_config(page_title="Random Agent", page_icon="🎲")
 
 st.title("Random Agent Visualization")
 
