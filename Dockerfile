@@ -19,7 +19,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip uninstall torch -y
 RUN pip install --no-cache-dir torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu118
 
-RUN pip install pettingzoo[mpe]==1.24.3
+# Prev: 1.19.0, 1.24.3
+RUN pip install pettingzoo[mpe]==1.19.0
 
 # Copy the source code into the container
 COPY src/ /app/src/

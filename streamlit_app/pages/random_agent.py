@@ -1,63 +1,75 @@
-import streamlit as st
-
-st.set_page_config(page_title="Random Agent", page_icon="🎲")
-
 import io
 
 import gym
 import pettingzoo
+import streamlit as st
+from pettingzoo.mpe import (
+    simple_adversary_v2,
+    simple_crypto_v2,
+    simple_push_v2,
+    simple_reference_v2,
+    simple_speaker_listener_v3,
+    simple_tag_v2,
+    simple_world_comm_v2,
+)
 from PIL import Image
 
+st.set_page_config(page_title="Random Agent", page_icon="🎲")
 st.write(f"PettingZoo version: {pettingzoo.__version__}")
 
-possible_envs = [
-    "simple_adversary_v3",
-    "simple_crypto_v2",
-    "simple_push_v2",
-    "simple_reference_v2",
-    "simple_speaker_listener_v3",
-    "simple_spread_v3",
-    "simple_tag_v2",
-    "simple_world_comm_v2",
-    "simple_adversary_v1",
-    "simple_crypto_v1",
-    "simple_push_v1",
-    "simple_reference_v1",
-    "simple_speaker_listener_v1",
-    "simple_spread_v1",
-    "simple_tag_v1",
-    "simple_world_comm_v1",
-    "simple_adversary_v2",
-]
 
-available_envs = []
+def run_random_episode_mpe(env, max_steps=1000, render=True):
+    env.reset()
+    frames = []
+    total_steps = 0
+    episode_done = False
 
-for env in possible_envs:
-    try:
-        # Dynamically import the environment
-        module = __import__(f"pettingzoo.mpe.{env}", fromlist=[""])
-        available_envs.append(env)
-    except ImportError:
-        # Skip if import fails
-        pass
+    while not episode_done and total_steps < max_steps:
+        for agent in env.agent_iter():
+            total_steps += 1
+            last_values = env.last()
+            if len(last_values) == 5:
+                observation, reward, termination, truncation, info = last_values
+            elif len(last_values) == 4:
+                observation, reward, done, info = last_values
+                termination = truncation = done
+            else:
+                raise ValueError(
+                    f"Unexpected number of values from env.last(): {len(last_values)}"
+                )
 
-# Display the available environments in Streamlit
-st.write("Available environments:", available_envs)
+            if termination or truncation:
+                action = None
+                episode_done = True
+            else:
+                action = env.action_space(agent).sample()
 
-from pettingzoo.mpe import simple_adversary_v3 as simple_adversary
+            env.step(action)
 
-st.title("Random Agent Visualization")
+        if render:
+            try:
+                frame = env.render()
+                if frame is not None:
+                    frames.append(Image.fromarray(frame))
+            except Exception as e:
+                st.warning(f"Rendering not supported: {e}")
+                render = False
 
-# List of environments to choose from
-GYM_ENVIRONMENTS = ["CartPole-v1", "MountainCar-v0", "Acrobot-v1"]
-MPE_ENVIRONMENTS = ["simple_adversary_v3"]
+        if episode_done:
+            break
+
+    env.close()
+    return frames, total_steps
 
 
 def run_random_episode_gym(env, max_steps=1000):
     obs = env.reset()
-    done = False
     frames = []
-    for _ in range(max_steps):
+    total_steps = 0
+    done = False
+
+    while not done and total_steps < max_steps:
+        total_steps += 1
         frame = env.render(mode="rgb_array")
         frames.append(Image.fromarray(frame))
         action = env.action_space.sample()
@@ -65,22 +77,35 @@ def run_random_episode_gym(env, max_steps=1000):
         if done:
             break
     env.close()
-    return frames
+    return frames, total_steps
 
 
-def run_random_episode_mpe(env, max_steps=1000):
-    env.reset()
-    frames = []
-    for _ in range(max_steps):
-        frame = env.render()
-        frames.append(Image.fromarray(frame))
-        actions = {agent: env.action_space(agent).sample() for agent in env.agents}
-        _, _, terminations, truncations, _ = env.step(actions)
-        if any(terminations.values()) or any(truncations.values()):
-            break
-    env.close()
-    return frames
+def create_mpe_env(env_name):
+    env_mapping = {
+        "simple_adversary_v2": simple_adversary_v2,
+        "simple_crypto_v2": simple_crypto_v2,
+        "simple_push_v2": simple_push_v2,
+        "simple_reference_v2": simple_reference_v2,
+        "simple_speaker_listener_v3": simple_speaker_listener_v3,
+        "simple_tag_v2": simple_tag_v2,
+        "simple_world_comm_v2": simple_world_comm_v2,
+    }
+    return env_mapping[env_name].env(render_mode="rgb_array")
 
+
+st.title("Random Agent Visualization")
+
+# List of environments to choose from
+GYM_ENVIRONMENTS = ["CartPole-v1", "MountainCar-v0", "Acrobot-v1"]
+MPE_ENVIRONMENTS = [
+    "simple_adversary_v2",
+    "simple_crypto_v2",
+    "simple_push_v2",
+    "simple_reference_v2",
+    "simple_speaker_listener_v3",
+    "simple_tag_v2",
+    "simple_world_comm_v2",
+]
 
 st.sidebar.header("Environment Configuration")
 env_type = st.sidebar.radio("Environment Type", ["Gym", "MPE"])
@@ -94,13 +119,13 @@ if st.sidebar.button("Run Random Agent"):
     with st.spinner(f"Running random agent on {selected_env}..."):
         if env_type == "Gym":
             env = gym.make(selected_env)
-            frames = run_random_episode_gym(env)
+            frames, total_steps = run_random_episode_gym(env)
         else:
-            env = simple_adversary.parallel_env(render_mode="rgb_array")
-            frames = run_random_episode_mpe(env)
+            env = create_mpe_env(selected_env)
+            frames, total_steps = run_random_episode_mpe(env)
 
         if frames:
-            st.success("Episode completed!")
+            st.success(f"Episode completed in {total_steps} steps!")
             img_buffer = io.BytesIO()
             frames[0].save(
                 img_buffer,
