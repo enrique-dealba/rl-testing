@@ -90,7 +90,7 @@ def create_mpe_env(env_name):
         "simple_tag_v2": simple_tag_v2,
         "simple_world_comm_v2": simple_world_comm_v2,
     }
-    return env_mapping[env_name].env(render_mode="rgb_array")
+    return env_mapping[env_name].env()  # No render_mode specified
 
 
 st.title("Random Agent Visualization")
@@ -122,7 +122,7 @@ if st.sidebar.button("Run Random Agent"):
             frames, total_steps = run_random_episode_gym(env)
         else:
             env = create_mpe_env(selected_env)
-            frames, total_steps = run_random_episode_mpe(env)
+            frames, total_steps = run_random_episode_mpe(env, render=True)
 
         if frames:
             st.success(f"Episode completed in {total_steps} steps!")
